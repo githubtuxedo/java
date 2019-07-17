@@ -1,0 +1,36 @@
+命令
+        javac       编译
+        javac       运行
+
+数据类型
+        基本：byte char short int float long double(从低到高) boolean
+                从低级到高级 系统自动转
+                强制转换类型：使用情况：把高级别数赋给低级别变量
+        引用：数组 类 接口
+
+关键字
+        final：不可被覆盖 不可被继承 只能被赋值一次
+
+多态
+        定义：某种事物不同的具体体现
+        前提：1. 必须要有关系如继承或实现 2. 通常有覆盖操作
+
+同步代码块使用的锁可以使任意对象；同步函数使用的锁是this；静态同步函数使用的锁是该类的字节码文件对象
+
+基本数据类型对小奶狗包装类：都有XXX parseXXX方法，除了Character类型
+
+迭代器：
+        是一个接口，用于取集合中的元素
+        Collection coll = new ArrayList();
+        for(Iterator it = coll.iterator();it.hasNext();){
+                System.out.println(it.next());
+        }
+
+List    有序
+        ArrayList: 底层数据结构是数组 线程不同步，替代了Vector，查询很快
+        LinkedList: 底层是链表，线程不同步，增删元素很快
+        Vector: 底层是数组，线程同步，增删查都慢。
+        ListIterator 是 List 集合特有的迭代器
+
+泛型的使用情况：当类中的操作引用数据类型不确定的时候
+
