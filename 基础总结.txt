@@ -34,3 +34,314 @@ List    有序
 
 泛型的使用情况：当类中的操作引用数据类型不确定的时候
 
+
+java的基本注解                  https://www.cnblogs.com/wutongblog/p/9438569.html
+        1. jdk自带的
+                @Override       @Deprecated
+                @SuppressWarnings
+                        参数    deprecation;unchecked;fallthrough;path;serial;finally;all;
+        2. 元注解                       是指注解的注解
+                @Retention      定义注解的保留策略
+                        参数：          RetentionPolicy.SOURCE  //注解仅存于源码
+                                        RetentionPolicy.CLASS   //默认策略 注解在class字节码中存在，运行时无法获得
+                                        RetentionPolicy.RUNTIME //注解会在class字节码中存在，运行时可反射获取到
+                                                @Target(ElementType.FIELD)
+                                                @Retention(RetentionPolicy.RUNTIME)
+                                                @Document
+                                                public @interface Page {
+                                                        public int value() default 1;
+                                                }
+
+                @Target         定义注解的作用目标
+                        参数：          ElementType.TYPE        //描述接口 类 枚举 注解
+                                                @Target(ElementType.TYPE)
+                                                public @interface People {
+                                                        public String value() default "";
+                                                }
+                                        ElementType.FIELD       //字段 枚举的常量 用于描述域
+                                                @Target(ElementType.FIELD)
+                                                @Document
+                                                public @interface Mode {
+                                                        public int value() default 0;
+                                                }
+                                        ElementType.METHOD      //描述方法
+                                        ElementType.PARAMETER   //描述方法参数
+                                        ElementType.CONSTRUCTOR //描述构造函数
+                                        ElementType.LOCAL_VARIABLE      //描述局部变量
+                                        ElementType.ANNOTATION_TYPE     //注解
+                                        ElementType.PACKAGE     //描述包
+                @Document       标记注解 没有成员 用于描述其他类型的annotation应该被作为被标注的程序成员的公共API
+                                说明注解将被包含在javadoc中
+
+                @Inherited      说明子类可以继承父类中的该注解
+        3. 自定义注解
+
+        扩展
+                1.spring注解                            https://blog.csdn.net/weixin_39805338/article/details/80770472
+                        1.@Configuration注解    该类等价于XML中配置beans 相当于Ioc容器 它的某个方法头上如果注册了@Bean
+                                                就会作为这个Spring容器中的Bean，与xml中配置的bean意思一样
+                                @Configuration
+                                public class MainConfig{
+                                        public String appid;
+                                        protected MainConfig(){}
+                                        @Bean
+                                        public WxMpService wxMpService(){
+                                                ...
+                                        }
+                                }
+                                可在程序中用@Autowired或@Resource注解取得用@Bean注解的bean
+                        2.Value注解             简化从properties里取配置
+                                @Value("${wx_appid})
+                                public String appid;            //即便给变量赋值 也会以配置文件的值为准
+                        3.@Controller   @Service     @Repository     @Component 该4种注解意思一样 并无区别
+                        4.@PostConstruct && @PreDestory
+                                实现初始化和销毁bean之前进行操作  //只有一个方法可用此注释 方法不能有参数 必须无返回值且方法非静态
+                        5.@Primary              自动装配出现多个Bean候选时 注解为@Parimary的Bean作为首选 否则异常
+                                @Component
+                                public class Apple implements Fruit{
+                                        @Override
+                                        public String hello(){
+                                                return 'i am apple';
+                                        }
+                                }
+
+                                @Component
+                                @Primary
+                                public class Pear implements Fruit{
+                                        @Override
+                                        public String hello(){ .. }
+                                }
+
+                                public class FruitService{
+                                        @Autowired
+                                        private Fruit fruit;
+                                        public String hello(){
+                                                return fruit.hello();
+                                        }
+                                }
+                        6.@Lazy(true)           用于指定该Bean是否取消预初始化 用于注解类 延迟初始化
+                        7.@Autowired            可用于为类的属性、构造器、方法进行注值；默认按byType 若发现找到多个bean 则按byName方式比较 若还有多个 则异常
+                                                        1.可手动指定按byName方式注入 使用@Qualifier
+                                                                @Autowired
+                                                                @Qualifier('pean')
+                                                                public Fruit fruit;     //从spring配置中 查找满足Fruit的bean 然后按@Qualifier指定pean
+                                                        2.若要允许null 可设它的required属性false
+                        8.@Resource             作用同上；默认按byName自动注入 若找不到再按byType找bean 若再无则异常 无论哪种找到多个则异常
+                                                        1.可手动指定bean 有两个属性name和type 用name属性则使用byName自动注入，同理..
+                                                                @Resource(name="bean名字")      || @Resource(type="bean的class")
+                                                        2.该注解属于J2EE 减少了与spring耦合
+                        9.@Async                java中使用线程的3种方法
+                                                        1.继承Thread 重写run方法
+                                                        2.实现Runnable 重写run方法
+                                                        3.使用Callable和Future接口创建线程 并能得到返回值
+                                                                class MyCallable implements Callable<Integer>{
+                                                                        private int i = 0;
+                                                                        @Override             //与run()方法不同的是 call()方法具有返回值
+                                                                        public Integer call(){
+                                                                                int sum = 0;
+                                                                                for(; i < 100; i++){
+                                                                                        System.out.println(Thread.currentThread().getName() + "" + i);
+                                                                                        sum += i;
+                                                                                }
+                                                                                return sum;
+                                                                        }
+                                                                }
+
+                                                                main方法内容：
+                                                                        Callable<Integer> myCallable =  new MyCallable();
+                                                                        FutureTask<Integer> ft = new FutureTask<Integer>(myCallable);//使用FutureTask包装MyCallable对象
+                                                                        for(int i = 0; i < 100; i++){
+                                                                                System.out.println(Thread.currentThread().getName() + "" + i);
+                                                                                if(i == 30){
+                                                                                        Thread thread = new Thread(ft); //FutureTask对象作为Thread对象的target创建新的线程
+                                                                                        thread.start();                 //线程进入到就绪状态
+                                                                                }
+                                                                        }
+                                                                        System.out.println('主线程for循环执行完毕..')；
+                                                                        try{
+                                                                                int sum = ft.get();     //      取得新创建的新线程中的call()方法返回的结果
+                                                                                System.out.println("sum = " + sum);
+                                                                        } catch(InterruptedException e){
+                                                                                e.printStackTrace();
+                                                                        } catch(ExecutionException e){
+                                                                                e.printStackTrace();
+                                                                        }
+                                                        4.@Async可视为第四种    //被注解的方法被调用时 会在新线程中执行 调用它的方法在原线程执行
+                                                                1.XML配置
+                                                                2.方法添加@Async
+                                                                        @Async('可以指定执行器id 也可不指定')
+                                                                        public static void testAsyncVoid(){
+                                                                                try{
+                                                                                        System.out.println('异常执行打印字符串');
+                                                                                        Thread.sleep(100000);   //让程序暂停100s 相当于耗时任务
+                                                                                        return new AsyncResult<String>('hello');        //又返回值情况
+                                                                                } catch(InterruptedException e){
+                                                                                        e.printStackTrace();
+                                                                                }
+                                                                        }
+                                                                        返回数据类型为Future类型 接口实现类是AsyncResult
+
+                                                                        public void test(){
+                                                                                Future<String> future = cc.tetsAsyncResult();
+                                                                                while(true){    //等待获取结果信息
+                                                                                        if(future.isDone()){
+                                                                                                System.out.println("result from asynchronus process -" + future.get());
+                                                                                                break;
+                                                                                        }
+                                                                                        Thread.sleep(1000);
+                                                                                }
+                                                                        }
+                        10.@Named               和Spring的@Component功能相同 @Named可有值 如没有生成的Bean名称默认和类名相同
+                                                如@Named public class Person || @Named("cc") public class Person
+                        11.@Inject              使用@Inject需要引用javax.inject.jar 它与spring没有关系 时jsr330规范 与@Autowired有互换性
+                        12.@Singleton           只要在类上加上这个注解 就可实现一个单例类 不需手动编写
+                        13.@Valid,@Valided      数据校验
+                                                        A.Valid         网上使用@Valid失效的情况
+                                                        1.@Valid必须使用在以@RequestBody接收参数的情况下
+                                                        2.使用ajax以post方式提示数据 禁止用Fiddler以及浏览器直接访问的方式测试接口
+                                                        3.用<mvc:annotation-driven/>添加注解驱动
+                                                        4.@Valid是应用在javabean上的校验
+                                                        5.添加必要的jar包
+                                                        6.@Valid下后面紧跟BindingResult result,验证结果保存在result
+                                                                @RequesMapping('/test')
+                                                                public String testValid(@Valid User user, BindingResult result){
+                                                                        if(result.hasErrors()){ ... }
+                                                                        return 'test';
+                                                                }
+                                                                //在入参User上添加了@Valid做校验 在User类属性上实行实际的特定校验
+                                                                //如    @NotBlank
+                                                                        private String name
+                                                                全部校验参数如下
+                                                                        空检查：@Null @NotNull @NotBlank @NotEmpty
+                                                                        布尔检查：@AssetTrue @AssetFalse
+                                                                        长度检查：@Size(min=,max=) @Length(min=,max=)
+                                                                        日期检查：@Past @Future @Pattern
+                                                                        数值检查：@Min(value="") @Max(value="") @DecimalMax(value=值)
+                                                                                @DecimalMin(value=值) @Digits(integer=, fraction=)
+                                                                                @Range(min=,max=,message="")
+                                                                        递归验证：@Valid
+                                                                        信用卡验证：@CreditCardNumber
+                                                                        邮件验证：@Email
+                                                                        @ScriptAsset(lang=,script=,alias=) @URL(protocal=,host=,prot=,regexp=,flags=)
+                                                        B.Validated             若想对使用@RequestParam方式接收参数方式校验使用@Validated
+                                                        1.步骤
+                                                                定义全局异常 验证失败时 返回失败提示 ...
+                                                        2.注：          @Valid使用hibernateValidation.jar校验
+                                                                        @Validated是只用springValidator校验
+                                                                        @Validated与@RequestBody结合使用时 在接口方法里要增加@Valid
+                                                                                public Object edit(@Valid @RequestBody AddrRo addRo){..}
+                        14.@RequestBody         默认属性required 默认为ture 当body无内容时异常
+                                                        application/x-www-form-urlencoded
+                                                        multipart/form-data
+                                                        注：需要jackson-databind.jar、bean配置
+                                                        @RequestMapping(value="/test",method=ReuqestMethod.POST)
+                                                        @ResponseBody
+                                                        public Object setOrderInfo(@RequestBody InfoVO infoVO, HttpServletRequest request, HttpServletRepsonse response){
+                                                                InfoVO cVo = getInfoVo(infoVO);
+                                                                return 'success';
+                                                        }
+                        15.@CrossOrign          解决跨域问题 类上或者方法上添加该注解
+                                                        @CrossOrign
+                                                        public class TestController extends BaseController{ ... }
+                        16.@RequestParam        提取和解析请求中的参数 @RequestParam支持类型转换
+                                                        @RequestParam([value="number"],[required=false]) String number
+                                                        //将请求参数为number映射到方法的number上 非必须
+                        17.@PathVariable,       处理request uri部分
+                                                        @Controller
+                                                        @RequesMapping("/owners/{a}")
+                                                        public class RelativePathUriTemplateController{
+                                                                @RequesMapping('/pets/{b}")
+                                                                public void findPet(@PathVariable("a") String a,@PathVariable String b, Model model){
+                                                                        //implementation omitted
+                                                                }
+                                                        }
+                          @RequestHeader, @CookieValue,   处理request header部分的注解 //将头部信息 cookie信息绑定到方法参数上
+                          @RequestParam, @RequestBody,    处理request body部分的注解
+                          @SessionAttributes, @ModelAttribute;    处理attribute类型的注解
+                        18.@Scope               配置bean的作用域        默认是单例模式 即@Scope("singleton")
+                                                        @Controller
+                                                        @RequesMapping("/test")
+                                                        @Scope("prototype")
+                                                        public class TestController{ .. }
+                                                        注：单例 即容器里就一个实例对象
+                                                            prototype 多对象 每次请求都会产生一个新的bean 由程序员负责销毁生成的对象
+                                                            request   对每次http请求都会产生一个新的bean 该bean仅在当前http request内有效
+                        19.@ResponseStatus      修饰一个类或方法 修饰类时 一般修饰一个异常类 当处理器方法被调用时
+                                                @ResponseStatus指定的code和reason会被返回前端。value属性是http状态码 reason是错误信息
+                                                的那个修改类或方法时 只要该类得到调用 那么value和reason都会被添加到response里
+                                                        @ResponseStatus(value=HttpStatus.FORBIDDEN,reason="err")
+                                                        public class UserException extends RuntimeException{ ... }
+                        20.@RestController      不够灵活 少用：@Controller + @ResponseBody 这两个注解的合并效果 即指定了该controller是组件 又指定该方法返回
+                                                的是String或json类型数据 若一个Controller既有SpringMVC返回视图的方法 又有返回json数据的方法即
+                                                使用@RestController太死板 灵活做法：定义controller时 直接使用@Controller 如需返回json可直接
+                                                在方法中添加@ResponseBody
+                        21.@ControllerAdvice    把@ControllerAdvice注解内部使用@ExceptionHandler @InitBinder @ModelAttribute注解的方法应用到所有的
+                                                @RequesMapping注解的方法  @ExceptionHandler最有用 另两个用处不大
+                                                        @ControllerAdvice
+                                                        public class GlobalExceptionHandler{
+                                                                @ExceptionHandler(SQLException.class)
+                                                                @ResponseStatus(value=HttpStatus.INTERNAL_SERVER_ERROR,reason='sql err')
+                                                                @ResponseBody
+                                                                public ExceptionResponse handleSQLException(HttpServletRequest request, Exception ex){
+                                                                        String message = ex.getMessage();
+                                                                        return ExceptionResponse.create(HttpStatus.INTERNAL_SERVER_ERROR.value(),message);
+                                                                }
+                                                        }
+                                                        表示让Spring捕获所有抛出的SQLException异常 并交由该被注解的handleSQLException方法处理 同时用
+                                                        @ResponseStatus指定了code和reason写到response上返回前端
+                        22.元注解
+                        23.@RequestMapping      用于类上 6个参数
+                                                        1.value method
+                                                        2.consumes produces
+                                                                consumes指定处理请求的提交内容类型(Content-Type)
+                                                                produces指定返回的内容类型 仅当request请求头中的(Accept)类型中包含该指定类型才返回
+                                                        3.params headers
+                                                                params指定request中必须包含某些参数值时 才让该方法处理
+                                                                        @RequesMapping(value="/test",params="name=sy")
+                                                                        public void findOrd(String name){ .. }  //仅处理请求中name值为sy的请求
+                                                                headers指定request中必须包含某些指定的header值
+                                                                        @RequesMapping(value="/test",headers="Referer=www.baidu.com")
+                                                                        public void findOrd(String name){ .. }
+                        24.@Bean                放在方法的上面，而不是类，意思是产生一个bean,并交给spring管理。
+                        25.@Qualifier           当有多个同一类型的Bean时，可以用@Qualifier("name")来指定。与@Autowired配合使用
+                        26.@ComponentScan       扫描到有@Component @Controller @Service等这些注解的类，则把这些类注册为bean
+                        27.@Profiles            隔离应用程序配置 让这些配置只能在特定的环境下生效
+                                                任何@Component或@Configuration都能被@Profile标记，从而限制加载它的时机
+
+                2.springMVC注解                         四大注解时类级别的 可不带参数 也可带一个参数 代表bean的名字
+                        1.@Component            通用标注，不清楚用哪个注解时，可用此通用注解
+                        2.@Controller           标注web请求控制器
+                        3.@Service              标注Service层的服务
+                        4.@Repository           标注DAO层的数据访问
+                        使用@Resource或@Autowired注解实现注入
+                                @Autowired      默认按类型装配 必须要求以来对象必须存在,如需允许null,可设required属性false
+                                @Qualifier      Autowired结合此注解实现名称装配
+                                @Resource       默认按名称装配 名称可通过name属性指定 如没有name 当注解写在字段上时 默认按字段名查找
+                                                        如注解写在setter方法上 默认取属性名装配 当找不到匹配的bean时按类型装配
+                                                        注：如那么属性指定 就会按名称装配；推荐使用@Resource 它属于J2EE 减少spring耦合
+                3.springBoot常用注解                            https://blog.csdn.net/qq_28483283/article/details/79988843
+                        @PathVariable           同上
+                        @Api @ApiOperation @ApiParam    主要用于swagger提供开发者文档 文档中生成的注释内容
+                        @RequestBody @RequestParam      都用于方法中接收参数使用
+                                                                1.@RequestBody一般处理的是在ajax请求中声明contentType:"application/json;charset=utf-8";
+                                                                也就是json和xml; 可以直接将页面中的参数封装成实体类中的数据传给后台
+                                                                2.@RequestParam一般在ajax里面没有声明contentType时 为默认...urlencode格式时用
+
+
+
+
+
+springboot                             安装破解 百度云文件      https://blog.csdn.net/qq_30182413/article/details/91041715
+        1.maven 项目创建                https://www.cnblogs.com/a8457013/p/9254917.html
+        2.前后端部署                    https://blog.csdn.net/weixin_40331613/article/details/81329277
+                                       https://blog.csdn.net/zks_4826/article/details/81603865
+        3.docker部署微服务              https://my.oschina.net/u/3796575/blog/1838385?nocache=1530498237368
+        4.自定义拦截器                  https://blog.csdn.net/qq_35098526/article/details/88734991
+
+spring cloud
+        1.项目概况                      https://www.cnblogs.com/springboot/p/8445780.html
+
+        知识点：
+                1.单点登陆 SSO          解决方案：              https://yq.aliyun.com/articles/636281
+                                                1.同域名下：Cookie域设置顶域 && session共享(spring-session)
+                                                2.非同域名下：CAS流程
