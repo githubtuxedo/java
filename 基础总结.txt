@@ -17,7 +17,7 @@
 
 同步代码块使用的锁可以使任意对象；同步函数使用的锁是this；静态同步函数使用的锁是该类的字节码文件对象
 
-基本数据类型对小奶狗包装类：都有XXX parseXXX方法，除了Character类型
+基本数据类型对象包装类：都有XXX parseXXX方法，除了Character类型
 
 迭代器：
         是一个接口，用于取集合中的元素
@@ -33,6 +33,475 @@ List    有序
         ListIterator 是 List 集合特有的迭代器
 
 泛型的使用情况：当类中的操作引用数据类型不确定的时候
+
+
+java知识体系 知识点             https://www.jianshu.com/p/e2d53c2109b0
+        1.基本概念
+                heap & stack区别：      前者是对象 后者是基本数据类型
+                类加载器                用来加载java类到java虚拟机中
+        2.关键字和操作符
+                finalize                java允许一个类中定义一个名为finalize()方法，用于垃圾回收前的清理工作 如释放资源；实际应用中 不要依赖使用该方法(很难知道该方法什么时候调用)
+                volatile(成员变量修饰符) 声明一个可能同时被并存运行的几个线程所控制和修改的变量 在访问volatile变量时不会执行加锁操作
+                synchronize(方法修饰符)  同步修饰符，多线程中 该修饰符用于在运行前 对他所属方法加锁 防止其他线程访问
+                native(本地修饰符)       指定此方法是用其他语言在程序外部编写的
+        3.面向对象OOP
+                泛型                    类型参数化
+                                        特点(使用过程中遵循的相关规范) 每个用例的标准类型参数如下：
+                                                E：元素 K：键   N：数字 T：类型 V：值   S、U、V等：多参数情况中的2,3,4个类型    ?：不确定类型
+                内部类                  必须继承一个父类或者实现一个接口(仅一个) 没有class关键字；分为成员内部类、局部内部类、匿名内部类
+                                        原则    1.匿名内部类不能有构造方法
+                                                2..........不能自定义任何静态成员 方法 和类
+                                                3..........不能是public protected private static
+                                                4.只能创建匿名内部类的一个实例
+                                                5.一个匿名内部类一定是在new后面 用其隐含实现一个接口或实现一个类
+                                                6.因匿名内部类为局部内部类 所以局部内部类的所有限制对其都生效
+        4.语法篇
+                Comparator 与 Comparable 接口           前者在集合外部实现的排序 后者在集合内部定义的方式实现排序
+                                                           因此实现排序 可在集合外定义Comparator接口的方法 或 在集合内实现Comparable接口的方法
+                深浅克隆                                实现Cloneable接口并重写Object类中的clone方法；
+                                                           实现Serializable接口 通过对象序列化和反序列化实现克隆 可实现真正的深克隆
+                                                           public Bean myCopy(){
+                                                                   Bean copy = null;
+                                                                   try{
+                                                                           ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                                                           ObjectOutputStream oos = new ObjectOutputStream(baos);
+                                                                           oos.writeObject(this);
+                                                                           ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                                                                           ObjectInputStream ois = new ObjectInputStream(bais);
+                                                                           copy = (Bean) ois.readObject();
+                                                                   }catch(IOException e){
+                                                                           e.printStackTrace();
+                                                                   }catch(ClassNotFoundException e){
+                                                                           e.printStackTrace();
+                                                                   }
+                                                                   return copy;
+                                                           }
+                                                           注：假如有引用类型也需要序列化；
+                                                                BeanUtils的copyProperties()方法并不是完全的深度克隆
+                                                                实现高性能且安全的深度克隆方法还是实现Serializable接口,多层克隆时，引用类型均要实现Serializable接口
+                构建不可变类结构                        1.类添加final修饰 保证不被继承  2.保证所有成员变量私有 并加final修饰
+                                                        3.不提供改变成员变量方法 包括setter     4.通过构造器初始化所有成员 进行深拷贝
+                                                        5.在getter方法中 不要直接返回对象本身 而是返回克隆对象
+                String StringBuffer StringBuilder区别   1.String类不可变类 用String操作字符串时 一旦字符串值改变 会在内存创建多一个空间保存新字符串 字符串的频繁操作很低效
+                                                        2.一般涉及字符串操作用后两个 都继承了AbstractStringBuilder，SBuf线程安全 SBui没有
+                                                                所以SBui可操作SBuf 反之不行；也是因为线程的原因，相对SBui相率高
+        5.数据结构
+                Array ArrayList                         可把ArrayList想象成"会自动扩增容量的Array"；后者只能存放对象类型；前者包含基本类型和对象类型 但存放的一定是同种类型
+                                                        Array([]):最高效 但其容量固定且无法动态改变；ArrayList:容量可动态增长，牺牲效率
+                                                        基于效率和类型尽可能用前者
+                BlockingQueue阻塞队列                   1.队列为空时获取元素线程等待队列变非空  2.队列满时存储元素线程等待队列可用
+                                                        适用于生产者消费者场景
+                Collection                              是集合类的上级接口 子接口主要有Set和List
+                Collections                             是针对集合类的一个帮助类 提供了操作集合的工具方法 实现搜索 排序 线程安全等操作
+                Hashcode                                hash方法的主要作用是配合基于散列的集合一起正常运行 这样的散列集合包括HashSet HashMap HashTable
+                                                                简单来说就是通过hash值散列 便于大数据量的时候 查重
+                一致性Hash算法                          通过减少影响范围的方式解决了增减服务器导致的数据散列问题 从而解决分布式环境下负载均衡问题
+                                                                遍历方式 效率：
+                                                                        根据entrySet()获取HashMap的键值对的Set集合
+                                                                        通过Iterator迭代器遍历第一步得到的集合
+                                                                                Integer integ = null;
+                                                                                Iterator iter = map.entrySet().iterator();
+                                                                                while(iter.hasNext()){
+                                                                                        Map.Entry entry = (Map.Entry)iter.next();
+                                                                                        key = (String)entry.getKey();
+                                                                                        integ = (Integer)entry.getValue();
+                                                                                }
+                HashMap                                 是通过"拉链法"实现的hash表 包括几个重要成员变量 table size threshold loadFactory modCount
+                Map接口提供三个集合视图                 Set keyset():                   返回map中包含的所有key的一个Set视图
+                                                      Collection values():              返回一个map中包含所有value的一个Collection视图
+                                                      Set<Map.Entry<K,V>> entrySet(): 返回一个map中包含所有映射的一个集合视图
+                HashMap LinkedMap TreeMap区别           HashMap不支持线程同步 如需要同步可用Collections.synchronizedMap(HashMap map)方法使它具有同步能力
+                                                        Hashtable不许允许记录键或值为空 支持线程同步 写入较慢
+                                                        LinkedHashMap保存记录的插入顺序 用Iteraor遍历时 先得到的肯定是先插入的 遍历比HashMap慢
+                                                        TreeMap能把它保存的记录根据键排序 默认升序 TreeMap的键和值都不能为空 通过红黑树实现
+                Set                                     Set元素不能重复 用hashcode和equals方法判断是否重复
+        IO流：file、io、设计模式                        File    创建 createNewFile()    //在指定位置创建空文件 成功返回true，已存在返回false
+                                                                    mkdir()             //指定位置创建 只会创建最后一级目录 若上级目录不存在抛异常
+                                                                    mkdirs()            //指定位置创建 会创建路径中所有不存在的目录
+                                                                    renameTo(File dest) //重命名文件或文件夹
+                                                                删除    delete()        //删除文件或一个空文件夹 非空文件不能删 成功返回true
+                                                                        deleteOnExit()  //虚拟机终止时 删除抽象路径名表示的文件或目录 保证程序异常时创建的临时文件也可被删除
+                                                                判断    exists()        //是否存在 文件或文件夹
+                                                                        isFile()        //是否是一个文件
+                                                                        isDirectory()   //是否是一个目录
+                                                                        isHidden()      //是否是一个隐藏的文件或是否是隐藏的目录
+                                                                        isAbsolute()    //测试抽象路径名是否为绝对路径名
+                                                                获取    getName()       //获取文件夹名称 不含上级路径
+                                                                        getPath()       //返回绝对路径 可以是相对 但目录要指定
+                                                                        getAbsolutePath()       //获取文件绝对路径 与文件是否存在无关
+                                                                        length          //获取文件大小(字节数)
+                                                                        getParent()     //返回抽象路径父目录的路径名字符串
+                                                                        lastModifed()   //获取最后一个修改时间
+                                                                        static File[] listRoots //列出所有根目录
+                                                                        list()          //返回目录下的文件或者目录名 包含隐藏文件
+                                                                        list(FilenameFilter filter)     //返回指定当前目录符合过滤条件的子文件或子目录
+                                                                        listFiles()     //返回目录下的文件或目录对象 包含隐藏文件
+                                                                        listFiles(FilenameFilter filter)        //返回指定当前目录符合过滤的子文件或子目录
+                                                        IO      分字符流和字节流
+                                                                        字节流读取 推荐 使用缓冲        写入同理用缓冲//byte[] byt = "test".getBytes(); fos.write(byt);
+                                                                                DEMO:文件拷贝
+                                                                                private static void showContent(String path) throws IOException{
+                                                                                        FileInputStream fis = new FileInputStream(path1);
+                                                                                        FileOutputStream fos = new FileOutputStream(path2);
+
+                                                                                        byte[] byt = new byte[1024];
+                                                                                        int len = 0;
+                                                                                        while((len = fis.read(byt)) != -1){
+                                                                                                System.out.println(new String(byt, 0, len));
+                                                                                                fos.write(byt, 0, len);
+                                                                                        }
+                                                                                        /*=======================================================*/
+                                                                                        // 使用缓冲流
+                                                                                        BufferedInputStream bis = new BufferedInputStream(fis);
+                                                                                        BufferedOutputStream bos = new BufferedOutputStream(fos);
+                                                                                        int len = 0;
+                                                                                        while ((len = bis.read()) != -1) {
+                                                                                                bos.write(len);
+                                                                                        }
+                                                                                        /*=======================================================*/
+                                                                                        fis.close();
+                                                                                }
+                                                                        字符流          //字符流 = 字节流 + 编码表
+                                                        应用场景
+                                                                FileInputStream/FileOutputStream 需要逐个字节处理原始二进制流的时候 效率低下
+                                                                FileReader/FileWriter 需要逐个字符处理的时候使用
+                                                                StringReader/StringWriter 需要处理字符串的时候，可以将字符串保存为字符数组
+                                                                PrintStream/PrintWriter 用来包装FileOutputStream 对象，方便直接将String字符串写入文件
+                                                                Scanner　用来包装System.in流，很方便地将输入的String字符串转换成需要的数据类型
+                                                                InputStreamReader/OutputStreamReader 字节和字符的转换桥梁，在网络通信或者处理键盘输入的时候用
+                                                                BufferedReader/BufferedWriter， BufferedInputStream/BufferedOutputStream
+                                                                        缓冲流用来包装字节流后者字符流，提升IO性能，BufferedReader还可以方便地读取一行，简化编程
+                                                                SequenceInputStream(InputStream s1, InputStream s2)序列流，合并流对象时使用
+                                                                ObjectInputStream、ObjectOutputStream，方法用于序列化对象并将它们写入一个流 另一个方法用于读取流并反序列化对象
+                                                                ByteArrayInputStream、ByteArrayOutputStream，操作数组
+                                                                DataInputStream、DataOutputStream操作基本数据类型和字符串
+                                                        JAVA-IO流体系
+                                                                在IO中，具体构件角色是节点流，装饰角色是过滤流
+        多线程总结
+                概念                                    哪些集合类是线程安全的
+                                                                Map类中两种容器
+                                                                        java.util.Hashtable 散列表
+                                                                        java.util.concurrent.ConcurrentHashMap  性能更好的散列表(锁分离技术)
+                                                                Collection部分运用CopyOnWrite机制(写时复制机制) 利用的ReentrantLock实现的线程安全
+                                                                        缺点：占用内存  数据一致性问题
+                                                                        java.util.concurrent.CopyOnWriteArrayList
+                                                                        java.util.concurrent.CopyOnWriteArraySet 基于CopyOnWriteArrayList实现
+                                                        忙循环
+                                                                一个空循环 目的保留cpu缓存 多核系统中 一个线程醒来时可能在另一个内核运行 这样会重建缓存
+                                                        线程局部变量    ThreadLocal 为变量在每个线程中创建一个副本
+                                                                常见使用场景：用来解决 数据库连接、Session管理等
+                Threadl类及常用函数                      调整线程优先级(优先级用整数表示) 范围1-10
+                                                                三个静态常量    static int MAX_PRIORITY 最高10
+                                                                                static int MIN_PRIORITY 最低1
+                                                                                static int NORM_PRIORITY 默认5  (主线程默认)
+                                                                Thread类的setPriority()和getPriority()方法分别用来设置和获取线程的优先级
+                                                                Thread.sleep(long millis)       线程睡眠 不会释放锁对象 必须捕获异常
+                                                                Object类中的wait()              线程等待 通过notify() notifyAll()唤醒
+                                                                                                Obj.wait() Obj.notify必须在synchronized(Obj){...}语句块内
+                                                                                                Thread.sleep()与Object.wait()区别在于Object.wait()在释放CPU同时释放了对象锁的控制
+                                                                                                会释放锁对象 但时间到后还会返回；sleep()方法并不释放锁，仅释放CPU控制权
+                                                                                                与sleep相同点   可通过interrupt打断暂停状态
+                                                                Thread.yield()                  线程让步 暂停当前正在执行的线程对象 把执行机会让给相同或者更高优先级的线程
+                                                                join()                  线程加入 等待其他线程终止
+                                                                                        子线程调用了join()方法后面的代码，只有等到子线程结束了才能执行
+                                                                                        使用场景 主线程先于子线程执行完 单需要返回子线程数据即等待子线程结束后结束
+                                                                interrupt()     线线程发送一个中断信号，让线程在无限等待时（如死锁时）能抛出，从而结束线程
+                                                                                但是如果你吃掉了这个异常 那么这个线程还是不会中断
+                                                                三线程打印ABC
+                                                                        public class MyThreadPrinter2 implements Runnable {
+                                                                                private String name;
+                                                                                private Object prev;
+                                                                                private Object self;
+                                                                                private MyThreadPrinter2(String name, Object prev, Object self) {
+                                                                                        this.name = name;
+                                                                                        this.prev = prev;
+                                                                                        this.self = self;
+                                                                                }
+                                                                                @Override
+                                                                                public void run() {
+                                                                                        int count = 10;
+                                                                                        while (count > 0) {
+                                                                                        synchronized (prev) {
+                                                                                                synchronized (self) {
+                                                                                                System.out.print(name);
+                                                                                                count--;
+
+                                                                                                self.notify();
+                                                                                                }
+                                                                                                try {
+                                                                                                prev.wait();
+                                                                                                } catch (InterruptedException e) {
+                                                                                                e.printStackTrace();
+                                                                                                }
+                                                                                        }
+                                                                                        }
+                                                                                }
+
+                                                                                public static void main(String[] args) throws Exception {
+                                                                                        Object a = new Object();
+                                                                                        Object b = new Object();
+                                                                                        Object c = new Object();
+                                                                                        MyThreadPrinter2 pa = new MyThreadPrinter2("A", c, a);
+                                                                                        MyThreadPrinter2 pb = new MyThreadPrinter2("B", a, b);
+                                                                                        MyThreadPrinter2 pc = new MyThreadPrinter2("C", b, c);
+
+                                                                                        new Thread(pa).start();
+                                                                                        Thread.sleep(100);  //确保按顺序A、B、C执行
+                                                                                        new Thread(pb).start();
+                                                                                        Thread.sleep(100);
+                                                                                        new Thread(pc).start();
+                                                                                        Thread.sleep(100);
+                                                                                        }
+                                                                                }
+                                                                启动一个线程调用run()还是start() 两者区别
+                                                                        必须现start 再run 就是为了实现多线程的优点
+                                                                        start()作用启动一个新线程 不能重复调用
+                                                                        run() 可被重复调用 并不会启动新线程
+                                                                java中如何停止一个线程
+                                                                        1.使用退出标志 即当run方法完成后终止
+                                                                        2.使用interrupt方法中断线程     https://www.cnblogs.com/carmanloneliness/p/3516405.html
+                                                                如何两个线程共享数据
+                                                                        在线程共享对象 然后通过wait/notify/notifyAll、await/signal/signalAll唤起和等待
+                                                                如何调用wait方法
+                                                                        应该在循环调用 因为当线程获取到cpu开始执行时 其他条件可能没满足 所以处理前 循环检测条件更好
+                生命周期和线程同步                                就绪&执行
+                                                                        如希望调用子线程的start()方法后子线程立即开始执行
+                                                                        程序可以使用Thread.sleep(1)来让当前运行的线程 即主线程睡眠1毫秒
+                                                                线程同步的方法
+                                                                        1.同步方法      synchronized关键字修饰的方法
+                                                                        2.同步代码块    synchronized关键字修饰的语句块
+                                                                        3.使用特殊域变量(volatile) 实现线程同步
+                                                                                该关键字为域变量的访问提供了一种免锁机制
+                                                                                使用该修饰域相当于告诉虚拟机该域可能被其他线程更新
+                                                                                因此每个使用该域就要重新计算 而非使用寄存器中的值
+                                                                                不提供原子操作 不能修饰final类型的变量
+                                                                        4.使用重入锁    ReentrantLock 与使用synchronized有相同的基本行为和语义
+                                                                        5.使用局部变量  ThreadLocal 副本相互独立 互不影响
+                                                                synchronized 和ReentrantLock(Lock)
+                                                                        1.前者是关键字 后者是类
+                                                                        2.前者不要用户手动释放锁 后者需要在finally中释放否则死锁
+                                                                        3.后者可让等待锁的线程响应中断 而前者不行
+                                                                        4.后者可知道有没有成功获取锁 前者不行
+                                                                        5.后者可提高多线程读操作效率
+                                                                什么场景volatile可替换synchroized
+                                                                        只需保证共享资源的可见性的时候
+                                                                如何从给定集合那创建一个synchronized的集合
+                                                                        用Collections.synchronizedCollection(Collection c)
+                                                                        根据指定集合获取一个synchronized(线程安全的)集合
+                                                                        如HashMap可这样实现线程安全
+                                                                                Map m = Collections.synchronizedMap(new HashMap);
+                多线程锁机制                                     https://www.cnblogs.com/hanganglin/p/3577096.html
+                                                                几种锁机制
+                                                                        重入锁
+                                                                        自旋锁
+                                                                        偏向锁
+                                                                        轻量级锁
+                                                                        公平锁
+                                                                        非公平锁
+                                                                        乐观锁
+                                                                        悲观锁
+                                                                分布式锁的几种实现方式  http://www.hollischuang.com/archives/1716
+                                                                        https://www.cnblogs.com/rwxwsblog/p/6046034.html
+                                                                Executors类是什么
+                                                                        Executor和ExecutorService两个接口区别
+                                                                                1.后者继承了前者 是前者子接口
+                                                                                2.前者定义了excute()方法接收一个Runnable接口对象 而后者的submit()方法可接收Runnable和Callable接口对象
+                                                                                3.前者的execute()方法不返回任何结果 二后者的submit可通过Future对象返回运算结果
+                                                                                4.除了允许客户端提交一个任务 后者还提供用来控制线程池的方法 如调用shutDown终止线程池
+                                                                                        前者提供工厂方法用来创建不同类型的线程池 如newSingleThreadExecutor
+                                                                                5.前者不能取消任务 后者可通过Future.cancel()取消pending任务
+                                                                Java线程转储(Thread Dump)
+                                                                        线程转储是一个JVM活动线程的列表 对分析系统瓶颈和死锁非常有用
+                                                                        如何获得：使用工具Profiler Kill-3命令 jstack等
+                                                                                jstack是jdk自带 基于终端可编脚本
+                                                                Java线程的优化
+                                                                        多用同步类(如：CountDownLatch Semaphore CyclicBarrier)少用同步集合 其优点简化编码操作
+                                                                        多用并发集合少用同步集合 其优点可扩展性更好 如需用map 首先该想到ConcurrentHashMap
+                web服务&Tomcat                                  利用nginx+tomcat+memcached组建web服务器负载均衡
+                                                                https://blog.51cto.com/passover/648182
+                Http                                            缓存机制
+                                                                        Last-Modified
+                                                                        ETag
+                                                                        Expires & Max-age
+                Servlet & JSP                                   转发(forward)和重定向(redirect)的区别
+                                                                        前者是控制权的转向 浏览器地址栏不变(尽量使用) RequesDispatcher对象的forward()方法 该对象可通过ServletRequest对象的getRequestDispatcher()获得
+                                                                        后者让浏览器跳转访问 无法访问到服务器保护的资源 HttpServletRepsonse对象调用sendRedirect()
+                                                                过滤器相关接口
+                                                                        Filter、FilterConfig和FilterChain
+                SSM + Hibernate                                 MyBatis中用 # 和 $ 书写占位符区别
+                                                                        #将传入的数据都当成一个字符串 $将传入的数据直接显示生成在SQL中 尽量用前者 写order by子句用后者
+                                                                Dao接口里的方法 不能重载
+                                                                Session加载实体对象的过程
+                                                                        1.Session在调用数据库查询功能前 在一级缓存中通过实体类和主键查找 若一级缓存命中且合法 直接返回
+                                                                        2.若一级未命中 Session会在当前NonExists记录查找 若存在同样的查询条件 则返回null
+                                                                        3.若一级缓存查询失败则查询二级缓存
+                                                                        4.若之前都未命中 则发出SQL 若查询未发现对应记录则将此次查询添加到Session的NonExists中记录 并返回null
+                                                                        5.根据映射配置和SQL语句得到ResultSet 并创建对应实体对象
+                                                                        6.将对象纳入Session(一级缓存)的管理
+                                                                        7.若有对应拦截器 则执行拦截器onLoad方法
+                                                                        8.若开启并设置了要用二级缓存 则将数据对象纳入二级缓存
+                                                                        9.返回数据对象
+        java进阶
+                垃圾回收                                GC运行流程
+                                                                1.标记 找出引用不为0的实例
+                                                                2.计划和清理 判断是否要压缩 回收所有free空间
+                                                                3.引用更新和压缩 将引用的地址更新 减少内存碎片
+                                                        新老区及永久区
+                                                                方法区：存放了要加载的类信息 静态变量 final类型常量 属性和方法信息
+                JVM                                     几种主要的JVM参数       https://www.cnblogs.com/edwardlauxh/archive/2010/04/25/1918603.html
+                                                                -server -Xmx3g -Xms3g -XX:MaxPermSize=128m
+                                                                -XX:NewRatio=1 eden/old 的比例
+                                                                -XX:SurvivorRatio=8 s/e 的比例
+                                                                -XX:+UseParallelGC
+                                                                -XX:ParallelGCThreads=8
+                                                                -XX:+UseParallelOldGC  这个是JAVA 6出现的参数选项
+                                                                -XX:LargePageSizeInBytes=128m 内存页的大小， 不可设置过大， 会影响Perm的大小。
+                                                                -XX:+UseFastAccessorMethods 原始类型的快速优化
+                                                        类加载器 三种   其任务是根据一个类的权限定名来读取此类的二进制字节流到JVM中 然后转换为一个与目标类对应的对象实例
+                                                                1.Bootstrap 引导类加载器
+                                                                        主要加载JVM自身需要的类
+                                                                2.Extension 扩展类加载器
+                                                                        负责加载<JAVA_HOME>/lib/ext目录下或由系统变量-Djava.ext.dir指定位路径中的类库
+                                                                3.System 系统类加载器
+                                                                        负责加载系统类路径java -classpath路径 通过ClassLoader#getSystemClassLoader()方法可获取该类加载器
+                                                        内存管理
+                                                                1.JVM内存(运行时数据区)分区及其对应作用
+                                                                        1.程序计数器    用来指示执行哪条指令 不会发生内存溢出现象
+                                                                        2.java栈       Java方法执行的内存模型
+                                                                        3.本地地方栈    与java栈的作用和原理相似 区别是本地方法栈是为执行本地方法（Native Method）服务的
+                                                                        4.堆           Java中的堆是用来存储对象本身的以及数组
+                                                                        5.方法区        存储了每个类的信息
+                                                        内存溢出的情况
+                                                                1.堆溢出        创建对象时若没有可分配的堆内存
+                                                                2.栈溢出        栈空间不足
+                                                                                        线程请求的栈深度大于虚拟机所允许的最大深度
+                                                                                        虚拟机在扩展栈深度时无法申请到足够的内存空间
+                                                                3.永久代溢出    分两种
+                                                                                        常量池溢出
+                                                                                        方法区溢出
+                网络编程                                NIO     (New IO)是一个可替代Java IO API的IO API
+                                                                Channels and Buffers(通道和缓冲区) 数据总是从通道读取到缓冲区 或缓冲区写到通道中
+                                                                Non-blocking IO(非阻塞IO) 让你非阻塞的使用IO
+                                                                Selectors(选择器) 用于监听多个通道的事件(如 链接打开 数据到达) 因此 单个线程可监听多个数据通道
+                                                        NIO的使用
+                                                                1.Channel(通道)
+                                                                        FileChannel     从文件中读写数据
+                                                                        DatagramChannel 能通过UDP读写网络中的数据
+                                                                        SocketChannel   能通过TCP读写网络中的数据
+                                                                        ServerSocketChannel     可监听新进来的TCP连接 像web服务器那样 对每个新进来的连接都会创建一个SocketChannel
+                                                                2.Buffer的使用
+                                                                        步骤
+                                                                                1.分配空间(ByteBuffer buf = ByteBuffer.allocate(1024); 还有一种allocateDirector)
+                                                                                2.写入数据到Buffer(int bytesRead = fileChannel.read(buf);)
+                                                                                3.调用filp()方法(buf.flip();)
+                                                                                4.从Buffer中读取数据(System.out.print((char)buf.get());)
+                                                                                5.调用clear()方法或compact()方法
+                                                                3.Selector
+                                                                        创建    Selector selector = Selector.open();
+                                                                                为了将Channel和Selector配合使用 必须将Channel注册到Selector上，通过SelectableChannel.register()方法实现
+                                                                                        ssc = ServerSocketChannel.open();
+                                                                                        ssc.socket().bind(new InetSocketAddress(PORT));
+                                                                                        ssc.configureBlocking(false);
+                                                                                        ssc.register(selector, SelectionKey.OP_ACCEPT);
+                                                        IO NIO 和 Netty
+                                                                IO机制归纳
+                                                                        1.传统java.io包 基于流模型实现的BIO
+                                                                        2.升级的java.nio包 构建多路复用的、同步非阻塞NIO
+                                                                        3.改造的NIO2.引入了异步非阻塞的AIO
+                                                                网络编程应用
+                                                                        1.基于BIO实现
+                                                                        2.基于NIO实现
+                                                                        2.基于Netty实现 (推荐)  采用Reactor线程模型
+                                                                                单线程模式、主从Reactor模式、多Reactor线程模式
+                                                        tomcat优化      NIO的应用是需要结合Tomcat优化来实现的
+                                                                https://blog.csdn.net/Kally_Wang/article/details/74989885
+
+                分布式专题
+                                                        消息中间件ActiveMQ
+                                                                1.为什么需要MQ  减轻服务器压力
+                                                                2.MQ选型对比    推荐RabbitMQ RocketMQ Kafka
+                                                                3.JMS规范 即平台无关性
+                                                                4.JMS消息通常有两种类型
+                                                                        点对点 若希望发送的每个消息都会被成功处理的话需要P2P模式
+                                                                                每个消息只有一个消费者
+                                                                                发送者和接受者之间在时间上没有依赖性
+                                                                                接受者在成功接受消息后需向队列应答成功
+                                                                        发布订阅 若希望发送的消息可不被做任何处理 或只被一个消费者 或可被多个消费者处理的话 可采用Pub/Sub模型
+                                                                                每个消息可有多个消费者
+                                                                                发布者和订阅者有时间上依赖性
+                                                                                为了消费消息 订阅者必须保持运行状态
+                                                                5.使用
+                                                                        pom添加配置
+                                                                        创建会话参数    session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                                                                                第一个参数是否使用事物
+                                                                                第二个参数消息的确认模式 三种
+                                                                6.集成spring
+                                                                7.持久化机制
+                                                                        jdbc持久化(推荐)
+                                                                8.消息的持久化订阅
+                                                                9.消息的可靠性保证
+                                                                        1.消息持久化
+                                                                        2.生产者发送的消息可被ActiveMQ收到
+                                                                        3.消费者收到了ActiveMQ发送的消息 需两端配置
+                                                                10.死信队列     保存处理失败或过期的消息
+                                                                11.虚拟Destinations实现消费者分组与简单路由
+                                                        ZooKeeper
+                                                                为什么需要它
+                                                                        提供了一些工具能够让你的分布式应用安全合理的处理部分失败的问题
+                                                                分布式系统特性
+                                                                        分布性  不同功能拆分模块 部署不同机器
+                                                                        对等性  服务备份成对等的几个副本 相互间对等
+                                                                        并发性  多进程 多JVM
+                                                                        缺乏全局时钟 节点有各自独立时钟 若有并发事物则需有一个居中协调的调度器
+                                                                        随机故障 可能来自于节点异常 通信故障 网络延时 网络分区
+                                                                总结
+                                                                        集群部署 容错性高
+                                                                        内存设计 高吞吐低延迟
+                                                                        特别适合读场景 性能好
+                                                                        临时节点设计 提供监听服务
+                                                                        ZK底层其实值提供了两个功能1.管理用户程序提交的数据 2.为用户程序提交数据节点监听服务
+                                                                ZooKeeper集群和Zab协议
+                                                                        生产中ZK以集群形式部署 分三类
+                                                                                Leader是集群工作机制中的核心 事物请求的唯一调度和处理者 保证集群事物处理的顺序性
+                                                                                Follower是集群工作机制中的跟随者处理非事物请求 转发事物请求给Leader参与事物请求proposal投票 参与leader选举投票
+                                                                                Observer观察者 和follower功能相同 单不参与任何形式投票
+                                                                        集群工作流程
+                                                                                ZK客户端会随机连接到ZK集群的一个节点 若是读请求 则从当前节点中读数据；
+                                                                                若是写请求 节点会向leader提交事务 leader广播事务 是要有超过半数节点写入成功 则请求会被提交
+                                                                        Zab协议是为分布式协调服务ZK专门设计的一种支持崩溃恢复的原子广播协议
+                                                                                ZK中 主要依赖ZAB协议实现分布式数据一致性
+                                                                        Zab周期 消息广播模式 崩溃恢复模式
+                                                                                1.消息广播 Zab协议中的leader等待follower的ack反馈 只要半数以上成功反馈就好
+                                                                                        但第二阶段的要求协调者必须等所有参与者都反馈ack确认后再发送commit消息
+                                                                                        要么全部成功 要么全失败 为防止阻塞 leader和follower间都有一个单独的队列进行收发消息
+                                                                                2.崩溃恢复
+                                                                                        每个Server发出一个投票 第一次投自己 投票信息(myid,ZXID)
+                                                                                        收集来自各个服务器的投票
+                                                                                        处理投票并重新投票 处理逻辑 优先比较ZXID 然后比较myid
+                                                                                        统计投票 只要超过半数的机器收到同样的投票信息 就可以确定leader
+                                                                                        改变服务器状态
+                                                                        ZooKeeper应用   https://blog.csdn.net/liu_zhaoming/article/details/79332232
+                                                                                提供了两款强大的ZK客户端 ZKClient和Curator 会一个就行
+                                                                                        其主要解决了会话重连 watcher反复注册等功能
+                                                                分布式系统的事物探讨
+                                                                        弱化一致性      如CouchDB Cassandra
+                                                                        弱化可用性      如MongoDB Redis
+                                                                        弱化分区容忍性  如ZooKeeper
+                                                                        1.XA协议  只是降低出问题概率 没有做到强一致性
+                                                                        2.TCC   应用最广
+                                                                        3.消息事物一致性方案
+                                                                        4.GTS-微服务分布式事物解决方案 （未来）
+                                                                DUBBO原理 应用  目的（减小service层压力）
+                                                                        框架设计 微内核+插件
+                Redis三部曲
+                        Redis高可用策略(主从&哨兵架构)          主从方式(推荐)
+                                                        缓存雪崩        redis服务器挂掉导致请求大量涌至数据库
+                                                        缓存穿透        大量缓存中不存在的请求key访问直接落到数据库 一般是恶意攻击
+                                                        缓存击穿        热点key在请求高峰失效 瞬间大量请求落到数据库
+        项目实战
+
+
+
 
 
 java的基本注解                  https://www.cnblogs.com/wutongblog/p/9438569.html
@@ -326,8 +795,24 @@ java的基本注解                  https://www.cnblogs.com/wutongblog/p/943856
                                                                 1.@RequestBody一般处理的是在ajax请求中声明contentType:"application/json;charset=utf-8";
                                                                 也就是json和xml; 可以直接将页面中的参数封装成实体类中的数据传给后台
                                                                 2.@RequestParam一般在ajax里面没有声明contentType时 为默认...urlencode格式时用
+                        @Data                           注解在类上 为类提供读写属性 此外还提供了equals() hashCode() toString()方法
 
+mybaits                 https://mybatis.org/mybatis-3/zh/index.html
+mybaits plus            https://mybatis.plus/guide/crud-interface.html
 
+swagger基础接口
+        @Api：                  修饰整个类，描述Controller的作用
+        @ApiOperation：         描述一个类的一个方法，或者说一个接口
+        @ApiParam：             单个参数描述
+        @ApiModel：             用对象实体来作为入参
+        @ApiProperty：          用对象接实体收参数时，描述对象的一个字段
+        @ApiResponse：          HTTP响应其中1个描述
+        @ApiResponses：         HTTP响应整体描述
+        @ApiIgnore：            使用该注解忽略这个API
+        @ApiError ：            发生错误返回的信息
+        @ApiImplicitParam：     一个请求参数
+        @ApiImplicitParams：    多个请求参数
+        config配置完成后 http://localhost:8080/swagger-ui.html访问
 
 
 
@@ -337,6 +822,9 @@ springboot                             安装破解 百度云文件      https:/
                                        https://blog.csdn.net/zks_4826/article/details/81603865
         3.docker部署微服务              https://my.oschina.net/u/3796575/blog/1838385?nocache=1530498237368
         4.自定义拦截器                  https://blog.csdn.net/qq_35098526/article/details/88734991
+        5.spring security连接数据库     https://blog.csdn.net/u012373815/article/details/54632176
+        6.jeesite项目导入               https://blog.csdn.net/wenyanxing/article/details/92803321 //打包好的文件 无法学习源码
+        7.spring boot组件学习           https://github.com/ityouknow/spring-boot-examples
 
 spring cloud
         1.项目概况                      https://www.cnblogs.com/springboot/p/8445780.html
