@@ -1,3 +1,8 @@
+intell ideal 破解安装 https://blog.csdn.net/qq_30182413/article/details/91041715
+初始化多模块maven springboot项目  https://baijiahao.baidu.com/s?id=1632687280256687825&wfr=spider&for=pc
+                            https://www.cnblogs.com/a8457013/p/9254917.html
+springboot项目部署      https://blog.csdn.net/weixin_40331613/article/details/81329277
+
 设计模式的原则
         1. 开闭原则：   对扩展开放，对修改关闭
         2. 单一职责：   每个类应该实现单一的职责，不然就该拆分
